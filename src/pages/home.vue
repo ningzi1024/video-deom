@@ -12,8 +12,7 @@
                         v-model="dateTimeDis"
                         type="datetimerange"
                         start-placeholder="请选择开始日期"
-                        end-placeholder="请选择结束日期"
-                        :default-time="['12:00:00']" />
+                        end-placeholder="请选择结束日期"/>
                 </div>
                 <div class="btns">
                     <el-button type="primary" icon="el-icon-search" size="medium" @click="searchHandle">搜索</el-button>
@@ -29,7 +28,10 @@
                             <div class="imgItem">
                                 <dl v-for="(img,i) in item" :key="`${img.name}-${i}`" @click="downLoad?selectImg(key,img.id):openImg(key,img.id)">
                                     <dt>
-                                        <img :src="require(`../assets/images/${img.name}`)" alt="">
+                                        <el-image 
+                                            :src="require(`../assets/images/${img.name}`)"
+                                            :preview-src-list="[require(`../assets/images/${img.name}`)]">
+                                        </el-image>
                                     </dt>
                                     <dd>{{ img.createTime }}</dd>
                                     <dd class="chooseImg" v-show="downLoad">
@@ -54,12 +56,12 @@
 </template>
 
 <script>
-import { DatePicker, Button, Collapse, CollapseItem, /*Image*/ } from 'element-ui'
+import { DatePicker, Button, Collapse, CollapseItem, Image } from 'element-ui'
 import List from '../utils/imgList'
 import moment from 'moment'
 import JSZip from 'jszip'
 import FileSaver from 'file-saver'
-// import _ from 'underscore'
+
 export default {
     name: 'home',
     components:{
@@ -67,11 +69,11 @@ export default {
         'el-button': Button,
         'el-collapse': Collapse,
         'el-collapse-item': CollapseItem,
-        // 'el-image': Image
+        'el-image': Image
     },
     data(){
         return{
-            dateTimeDis: '',
+            dateTimeDis: null,
             activeNames:['2020-05'],
             cacheList: {},
             list: { },
@@ -80,26 +82,36 @@ export default {
         }
     },
     watch:{
+        dateTimeDis(newVal){
+            if(newVal===null)
+                this.list = this.cacheList;
+        }
     },
     methods: {
+        /**
+         * 按日期时间搜索
+         */
         searchHandle(){
             let dataTime = this.dateTimeDis,
                 searchArr = [],
-                listArr = [];
+                listObj = {};
             if(!dataTime) return;
             dataTime.map(item=>{
                 searchArr.push(moment(item).format('X'));
             });
-            Object.values(this.cacheList).map(items=>{
-                items.map(item=>{
+            this.activeNames = [];
+            for(let key in this.cacheList){
+                listObj[key] = [];
+                this.cacheList[key].map(item=>{
                     let createTimeUx = moment(item.createTime).format('X');
-                    if(createTimeUx>=searchArr[0] && createTimeUx<=searchArr[1])
-                        listArr.push(item);
+                    if(createTimeUx>=searchArr[0] && createTimeUx<=searchArr[1]){
+                        listObj[key].push(item); 
+                        this.activeNames.push(key);
+                    }  
                 })
-            });
-            console.log(listArr);
+            }
             setTimeout(()=>{
-                this.list = listArr;
+                this.list = listObj;
             }, 200)
 
         },
@@ -344,4 +356,6 @@ export default {
         border-bottom: 1px dashed #EBEEF5;
     .el-collapse-item__wrap
         border-bottom: 1px dashed #EBEEF5;
+    .el-scrollbar__wrap
+        overflow-x hidden     
 </style>
