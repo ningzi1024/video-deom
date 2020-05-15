@@ -2,7 +2,7 @@
     <div class="video-demo-wrap">
         <header class="toptit">
             <span>位置：</span>
-            <span>总览</span>
+            <span>入侵信息</span>
         </header>
         <div class="content">
             <div class="optCon">
@@ -30,8 +30,7 @@
                                     <dt>
                                         <el-image 
                                             :src="require(`../assets/images/${img.name}`)"
-                                            :preview-src-list="[require(`../assets/images/${img.name}`)]">
-                                        </el-image>
+                                            :preview-src-list="downLoad?[]:[require(`../assets/images/${img.name}`)]"/>
                                     </dt>
                                     <dd>{{ img.createTime }}</dd>
                                     <dd class="chooseImg" v-show="downLoad">
@@ -82,14 +81,15 @@ export default {
         }
     },
     watch:{
-        dateTimeDis(newVal){
-            if(newVal===null)
+        dateTimeDis(newVal,oldVal){
+            console.log(newVal, oldVal);
+            if(!newVal && newVal===null)
                 this.list = this.cacheList;
         }
     },
     methods: {
         /**
-         * 按日期时间搜索
+         * 按日期时间搜索图片
          */
         searchHandle(){
             let dataTime = this.dateTimeDis,
@@ -99,14 +99,14 @@ export default {
             dataTime.map(item=>{
                 searchArr.push(moment(item).format('X'));
             });
-            this.activeNames = [];
             for(let key in this.cacheList){
                 listObj[key] = [];
                 this.cacheList[key].map(item=>{
                     let createTimeUx = moment(item.createTime).format('X');
                     if(createTimeUx>=searchArr[0] && createTimeUx<=searchArr[1]){
-                        listObj[key].push(item); 
-                        this.activeNames.push(key);
+                        listObj[key].push(item);
+                        if(this.activeNames.indexOf(key)<0)
+                            this.activeNames.push(key);
                     }  
                 })
             }
@@ -115,6 +115,13 @@ export default {
             }, 200)
 
         },
+
+        /**
+         * 全选/全不选 操作
+         * @param key type[string]
+         * @param id type[number]
+         * @returns {}
+         **/
         selectImg(key,id){
             let selectNum = 0;
             this.list[key].map(item=>{
@@ -135,6 +142,9 @@ export default {
             console.log(this.dateTimeDis);
             console.log('openImg',id);
         },
+        /**
+         *  取消下载操作
+         **/
         cancelDownload(){
             for(let key in this.list){
                 this.list[key].map(item=>item.selected = false)
@@ -144,6 +154,13 @@ export default {
             }
             this.downLoad = false;
         },
+
+
+        /**
+         * 全选/全不选 操作
+         * @param key type[string]
+         * @returns {Promise<unknown>}
+         **/
         selectAll(key){
             let curData = this.selectAllKey[key];
             this.selectAllKey[key] = !curData;
@@ -157,20 +174,13 @@ export default {
         dataFormate(data, format='YYYY年MM月'){
             return moment(data).format(format);
         },
-        // loadImage(img){
-        //     if(!img && typeof img !== 'string') return '';
-        //     else if(typeof img === 'string')
-        //         require(img);
-        //     else if(typeof img ==='object' && Object.prototype.toString.call(img)==='[object Array]'){
-        //         img.map(item=>{
-        //             require(item);
-        //         })
-        //     }
-        // },
         handleChange(val) {
             console.log(val);
         },
 
+        /**
+         *  下载按钮点击事件
+         **/
         downloadHandle(){
             let arrImages = [];
             let list = this.list;
@@ -184,7 +194,8 @@ export default {
                     }
                 })
             }
-            this.filesToRar(arrImages,'myImageFiles');
+            if(!arrImages || arrImages.length<=0) return;
+            this.filesToRar(arrImages,'warnImages');
             this.cancelDownload();
         },
 
@@ -193,6 +204,7 @@ export default {
          * filename 压缩包名
          * */
         filesToRar(arrImages, filename) {
+            if(!arrImages || arrImages.length<=0) return;
             let _this = this;
             let zip = new JSZip();
             let cache = {};
@@ -219,7 +231,11 @@ export default {
                 _this.$message.error('文件压缩失败');
             });
         },
-        //获取文件blob
+        /**
+         * 获取文件blob
+         * @param url type[string]
+         * @returns {Promise<unknown>}
+         */
         getImgArrayBuffer(url){
             // let _this=this;
             return new Promise((resolve, reject) => {
@@ -295,7 +311,9 @@ export default {
                     position relative
 
                     dt
-                        width 100%
+                        width 80%
+                        text-align center
+                        margin 0 auto
                         cursor pointer
 
                       img
@@ -306,10 +324,10 @@ export default {
                         margin-inline-start: 0;
 
                         &.chooseImg
-                            width .42rem
-                            height .42rem
+                            width .38rem
+                            height .38rem
                             position: absolute
-                            right .1rem
+                            right .4rem
                             top .1rem
 
                             .checkbox
@@ -325,6 +343,7 @@ export default {
                                 background-color #36a1ee
                             .icon-checked
                                 color #fff
+                                font-size .32rem
 
 
             .chooseAll
@@ -349,6 +368,7 @@ export default {
                 background-color #36a1ee
             .icon-checked
                 color #fff
+                font-size .32rem
     .el-collapse
         border-top none
     .el-collapse-item__header
