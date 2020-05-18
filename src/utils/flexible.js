@@ -3,21 +3,23 @@
     var dpr = window.devicePixelRatio || 1
   
     // adjust body font size
-    function setBodyFontSize () {
-      if (document.body) {
-        document.body.style.fontSize = (12 * dpr) + 'px'
-      }
-      else {
-        document.addEventListener('DOMContentLoaded', setBodyFontSize)
-      }
-    }
-    setBodyFontSize();
+    // function setBodyFontSize () {
+    //   if (document.body) {
+    //     document.body.style.fontSize = (12 * dpr) + 'px'
+    //   }
+    //   else {
+    //     document.addEventListener('DOMContentLoaded', setBodyFontSize)
+    //   }
+    // }
+    // setBodyFontSize();
   
     // set 1rem = viewWidth / 10
     function setRemUnit () {
         dpr = window.devicePixelRatio || 1
-        console.log(dpr);  
-        let rem = dpr===1 ? docEl.clientWidth / 19.2/2  : docEl.clientWidth / 19.2
+        let _screenWidth = 1920
+        const baseSize = 100;
+        const scale = docEl.offsetWidth/_screenWidth
+        let rem = baseSize * Math.min(scale, 2)
         docEl.style.fontSize = rem + 'px'
     }
   

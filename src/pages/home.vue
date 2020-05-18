@@ -2,14 +2,14 @@
     <div class="sysLog-wrap">
         <header class="toptit">
             <span>位置：</span>
-            <span>门禁监控日志</span>
+            <span>门禁监控</span>
         </header>
         <div class="content">
             <div class="opts">
                 <el-select
                         v-model="requestParams.date_type"
                         placeholder="请选择时间条件"
-                        class="sys-select">
+                        class="sys-select el-select-hh">
                     <el-option
                             v-for="item in timeTypes"
                             :key="item.value"
@@ -43,7 +43,10 @@
                         v-model="requestParams.value"
                         clearable>
                 </el-input>
-                <el-button type="primary" icon="el-icon-search" @click="searchHandle">搜索</el-button>
+                <el-button type="primary"
+                           icon="el-icon-search"
+                           @click="searchHandle"
+                           :loading="loading">搜索</el-button>
             </div>
             <div class="infos">
                 <el-table
@@ -81,13 +84,15 @@
                     </el-table-column>
                 </el-table>
             </div>
-            <el-pagination
-                    background
-                    @current-change="handleCurrentChange"
-                    layout="prev, pager, next"
-                    :total="pagination.total"
-                    :page-size="this.requestParams.limit">
-            </el-pagination>
+            <div class="pager">
+                <el-pagination
+                        background
+                        @current-change="handleCurrentChange"
+                        layout="prev, pager, next"
+                        :total="pagination.total"
+                        :page-size="this.requestParams.limit">
+                </el-pagination>
+            </div>
         </div>
     </div>
 </template>
@@ -120,7 +125,6 @@ export default {
                 start: 0,       /*开始时间戳*/
                 end:0           /*结束时间戳*/
             },
-            // timeType: '',
             timeTypes:[
                 {
                     value: 0,
@@ -140,8 +144,6 @@ export default {
                     label: '自定义'
                 }
             ],
-            // searchText: '',
-            searchType: '',
             searchTypes: [
                 {
                     value: 0,
@@ -175,20 +177,12 @@ export default {
                 //     event_point_name: '192-45-78-8485-1',
                 //     access_type: 1, //1.中控，2.全盾，3.海康
                 //     event_time: '2019-05-15 12:45:21'
-                // },
-                // {
-                //     card_no: '254878877',
-                //     verify_mode_name: '指纹',
-                //     name: '孙悟空',
-                //     door_action: '开门',
-                //     event_point_name: '192-45-78-8485-1',
-                //     access_type: 1,
-                //     event_time: '2019-05-26 01:20:45'
                 // }
             ],
             pagination: {
                 total: 10
-            }
+            },
+            loading: false
         }
     },
     mounted() {
@@ -196,13 +190,14 @@ export default {
     },
     watch:{
         dataPicker(newVal){
-            if(newVal){
+            if(newVal && newVal!==null){
                 this.requestParams.start = moment(newVal[0]).format('X');
                 this.requestParams.end = moment(newVal[0]).format('X');
                 console.log(newVal)
+            }else if(newVal===null){
+                this.requestParams.start = 0;
+                this.requestParams.end = 0;
             }
-
-
         }
     },
     methods: {
@@ -210,7 +205,6 @@ export default {
          * 数据初始化
          */
         init(){
-            // console.log(moment().format('YYYY-MM-DD HH:mm:ss'));
             this.getDataList();
         },
 
@@ -219,8 +213,30 @@ export default {
          */
         searchHandle(){
             console.log(this.requestParams);
+            if(!this.searchParamsCheck()) return;
+            this.requestParams.page = 1;
+            this.loading = true;
             this.getDataList();
         },
+
+        /*
+        *@returns Boolean {*}
+        **/
+        searchParamsCheck(){
+            let { requestParams } = this;
+            if(requestParams.date_type===4){
+                if(!requestParams.start){
+                    this.$message.error('请选择开始时间！');
+                    return false
+                }
+                else if(!requestParams.end){
+                    this.$message.error('请选择结束时间！');
+                    return false;
+                }
+            }
+            return true;
+        },
+
         /**
          * 获取数据
          */
@@ -228,6 +244,7 @@ export default {
             axios.get('/api/',{
                 params: this.requestParams
             }).then(res=>{
+                this.loading = false;
                 if(res.status === 200){
                     if(res.data !== ""){
                         let data = res.data;
@@ -240,7 +257,11 @@ export default {
                 }else{
                     this.$message.error('获取数据失败!');
                 }
-            }).catch(err=>console.log(err));
+            }).catch(err=>{
+                this.loading = false;
+                this.$message.error('网络异常，请稍候重试！');
+                console.log(err)
+            });
         },
 
         /**
@@ -258,6 +279,11 @@ export default {
             });
             return data;
         },
+
+        /**
+         * 翻页操作
+         * @param value type{number}
+         */
         handleCurrentChange(value){
             console.log(value);
             this.requestParams.page = value;
@@ -279,11 +305,14 @@ export default {
         border-bottom 2px solid #eee
         padding-left 45px
         font-size 15px
+        overflow hidden
     .content
         padding: 20px 40px 0 40px;
         .sys-select
             margin-right 15px
             display inline-block
+        .el-select-hh
+            margin-right 30px
         .keywords
             display inline-block
             width 200px
@@ -299,5 +328,10 @@ export default {
                 border-right 1px solid #fff
             td
                 text-align center
+        .pager
+            text-align center
+            margin-top 20px
+.el-message
+    font-size 14px;
 
 </style>
