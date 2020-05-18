@@ -9,7 +9,7 @@
                 <el-select
                         v-model="requestParams.date_type"
                         placeholder="请选择时间条件"
-                        class="sys-select el-select-hh">
+                        class="sys-select">
                     <el-option
                             v-for="item in timeTypes"
                             :key="item.value"
@@ -127,24 +127,32 @@ export default {
             },
             timeTypes:[
                 {
+                    value: -1,
+                    label: '请选择时间条件'
+                },
+                {
                     value: 0,
                     label: '今日'
                 },
                 {
                     value: 1,
-                    label: '本周'
+                    label: '一周'
                 },{
                     value: 2,
-                    label: '本月'
+                    label: '一月'
                 },{
                     value: 3,
-                    label: '本年'
+                    label: '一年'
                 },{
                     value: 4,
                     label: '自定义'
                 }
             ],
             searchTypes: [
+                {
+                    value: -1,
+                    label:'请选择搜索条件'
+                },
                 {
                     value: 0,
                     label: '门禁类型'
@@ -311,8 +319,6 @@ export default {
         .sys-select
             margin-right 15px
             display inline-block
-        .el-select-hh
-            margin-right 30px
         .keywords
             display inline-block
             width 200px
