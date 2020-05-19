@@ -136,13 +136,13 @@ export default {
                 },
                 {
                     value: 1,
-                    label: '一周'
+                    label: '一周内'
                 },{
                     value: 2,
-                    label: '一月'
+                    label: '一月内'
                 },{
                     value: 3,
-                    label: '一年'
+                    label: '一年内'
                 },{
                     value: 4,
                     label: '自定义'
